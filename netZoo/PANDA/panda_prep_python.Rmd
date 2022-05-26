@@ -1,0 +1,224 @@
+---
+title: "Preparation of input to run PANDA on Python"
+author: "Victor Hugo Calegari de Toledo"
+date: "February 21, 2020"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+This document describes how we create inputs of our fetal brain data for PANDA.
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+# Packages needed:
+#remotes::install_github("netZoo/netZooR", build_vignettes = TRUE)
+library(dplyr)
+library(data.table)
+#library(pandaR)
+library(parallel)
+library(foreach)
+library(org.Hs.eg.db)
+library(gtools)
+library(doParallel)
+library(clusterProfiler)
+library(reshape)
+library(netZooR)
+library(ggplot2)
+library(tidyverse)
+library(visNetwork)
+library(fgsea)
+options(stringsAsFactors = FALSE)
+options(bitmapType = 'cairo')
+```
+
+## PANDA input processing
+
+The motif file and the correspondence of their IDs to Gene Symbols were downloaded from Kimberly Glass PANDA [page]<https://drive.google.com/file/d/1MlPiAmOxu4mTd4nW9zMygzK1U9F8XB0M/view?usp=sharing> (23.10.2019).
+The PPI file was downloaded from StringDB [(version 11.5)<https://stringdb-static.org/download/protein.links.v11.5/9606.protein.links.v11.5.txt.gz>.
+The expression and ppi data were converted to Gene Symbol, which is used in PANDA's input files.
+ 
+### Annotation conversion:
+Initial number of interactions:
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+#First we will load the motif files and convert the motif ID to their correspondent gene symbol:
+
+## Preparing the data before running PANDA:
+  # Starting with the motif data
+  setwd("~/projects/sex_differences_fetal_brain/netZoo/panda/_m")
+  fread("~/projects/sex_differences_fetal_brain/netZoo/panda/_h/hg38_refseq_-750_250_1e-4", sep='\t') -> motif
+  read.delim("~/projects/sex_differences_fetal_brain/netZoo/panda/_h/Homo_sapiens_motifinfo.txt", sep='\t') -> anot
+  gsub("_.*","", anot$MotifID) -> anot$MotifID
+  gsub("^\\(|\\)_.*$", "", anot$TF_Info) -> anot$TF_Info
+
+  # Convert them to their gene symbol according to annotation:
+  unique(motif$V1) -> mt
+  mt[(mt %in% anot$MotifID)] -> mt #all of them are present
+  motif[motif$V1 %in% mt,] -> motif #all of them are present
+  '%!in%' <- function(x,y)!('%in%'(x,y))
+  anot[anot$MotifID %!in% mt,1] #"M0949" "M1950" "M1970"
+  anot[anot$MotifID %in% mt,] -> anot #3 of them were not present
+  motif %>% inner_join(anot, by=c("V1" = "MotifID")) -> motif
+  motif[,c(4,2,3)] -> motif
+  colnames(motif) = c("tf","target", "weight")
+  nrow(motif)
+```
+Initial number of genes:
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+length(unique(motif$target))
+
+```
+Checking for missing annotation:
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
+  # Manually imputing the missing gene symbols:
+  unique(motif$tf) # checking each of the motifs manually, the missing are:
+  # ENSG00000250542 (19) > no alias
+  # ENSG00000235187 (49) > no annotation at all
+  # AC226150.2 (67) > no alias
+  # ENSG00000229544 (90) > NKX1-2
+  motif$tf[motif$tf == "ENSG00000229544"] = "NKX1-2"
+  
+  #anot2 = bitr(motif$target,fromType="SYMBOL",toType="ENSEMBL",OrgDb="org.Hs.eg.db")
+  #motif %>% inner_join(anot2,by=c("target" = "SYMBOL")) -> motif_panda
+  #nrow(motif_panda)
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+  # We didn't need to convert to ENSEMBL
+  #mia = motif[!motif$target %in% motif_panda$target,]
+  #anot3 = bitr(mia$target,fromType="ALIAS",toType="ENSEMBL",OrgDb="org.Hs.eg.db")
+  #mia %>% inner_join(anot3,by=c("target" = "ALIAS")) -> motif_panda2
+  #motif_panda <- rbind(motif_panda,motif_panda2)
+  #mia2 = motif[!motif$target %in% motif_panda$target,]
+  # Most of what is missing is not properly curated, like the ^LOCs, or are pseudogenes
+```
+  Check them number of canonical interactions:
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
+# Transform the target column in the motif file in Ensembl Gene annotation:
+   #final_motifs = motif_panda[,c(1,4,3)]
+   #colnames(final_motifs) = c("tf","target","canonical")
+   table(motif$weight) #only canonical interactions
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+  fread("~/projects/sex_differences_fetal_brain/netZoo/panda/_h/corrected_exp.txt", sep='\t', header = T) -> exp_ensembl
+  gene_symbols = bitr(expr$Genes,fromType="ENSEMBL",toType="SYMBOL",OrgDb="org.Hs.eg.db")
+  expr %>% inner_join(gene_symbols,by=c("Genes" = "ENSEMBL")) -> exp
+  exp$Genes <- exp$SYMBOL
+  exp <- exp[,1:120]
+  
+  # 18137 genes
+  # 46 duplicated
+  exp <- exp[,lapply(.SD, mean), exp$Genes]
+  # 18091 genes
+  
+ colnames(exp)[1] <- "Genes"
+  
+  # ## FIRST: filter the motif by the expression files
+  motif_hit = motif[(motif$target %in% exp$Genes),] 
+  
+  # New number of interactions: 3405257
+  # Number of lost interactions: 3995520
+
+  # ## SECOND: filter the expression by the motif files:
+  exp = exp[(exp$Genes %in% motif$target),]
+  
+  # New number of genes: 15150
+
+```
+
+Creating the files to run PANDA in Python in the cluster:
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+  
+  # Now we will load the TFs interaction network and the aliases from other annotations:
+  ## Download the protein links from the stringDB:
+  string = fread('~/projects/sex_differences_fetal_brain/netZoo/panda/_h/9606.protein.links.v11.5.txt.gz.inproc', sep=' ')
+  string = string[string$combined_score >= 700,]
+  anotstring = fread('~/projects/sex_differences_fetal_brain/netZoo/panda/_h/9606.protein.aliases.v11.5.txt', sep='\t', header=TRUE)
+  colnames(anotstring)[1] <- "string_protein_id"
+  anotstring$string_protein_id = gsub("9606.","",anotstring$string_protein_id)
+  string$protein1 = gsub("9606.","",string$protein1)
+  string$protein2 = gsub("9606.","",string$protein2)
+  
+  # Convert the protein ENSEMBL IDs to gene symbol:
+  gene_symbols2 = bitr(string$protein1,fromType="ENSEMBLPROT",toType="SYMBOL",OrgDb="org.Hs.eg.db")
+  length(unique(string$protein1)) # 16814
+  string %>% inner_join(gene_symbols2,by=c("protein1" = "ENSEMBLPROT")) -> ppi
+  
+  gene_symbols3 = bitr(string$protein2,fromType="ENSEMBLPROT",toType="SYMBOL",OrgDb="org.Hs.eg.db")
+  ppi <- ppi[,c(4,2,3)]
+  ppi %>% inner_join(gene_symbols3,by=c("protein2" = "ENSEMBLPROT")) -> ppi
+  ppi <- ppi[,c(1,4,3)]
+  colnames(ppi) <- c("protein1","protein2","score")
+  
+  #missing_tfs = motif[!(motif$tf %in% anotstring$alias),]
+  #unique(missing_tfs$tf)
+  # "ZFY" no ENSP
+  # "SRY" no ENSP
+  # "ENSG00000235187" no ENSP
+  # "AC226150.2" no ENSP
+  # "ENSG00000250542" no ENSP
+  # "HSFY2" no ENSP
+  # For PANDA, the motif and the PPI files must not have the same proteins, therefore we are not filtering the motif by the PPI
+  # anotstring = anotstring[,1:2]
+  # a = anotstring[anotstring$alias %in% motif$tf,]
+  # a$source <- NULL
+  # b = string[string$protein1 %in% a$string_protein_id,]
+  # b = b[b$protein2 %in% a$string_protein_id,]
+  # c = inner_join(b,a,by=c("protein1"="string_protein_id"))
+  # c = c[,c(4,2,3)]
+  # colnames(c)[1] = "protein1"
+  # c = inner_join(c,a,by=c("protein2"="string_protein_id"))
+  # c = c[,c(1,4,3)]
+  # colnames(c)[2] = "protein2"
+  # c = c[c$protein1 %in% final_motifs$tf,]
+  # c = c[c$protein2 %in% final_motifs$tf,]
+  # final_ppi = unique(c, by=c("protein1","protein2")) #6196
+  # #final_motifs #5866185
+  # final_exp = exp_ensembl_hit #15796
+  
+  # Formating the files to run in Python:
+    # Reading metadata
+    pheno <- read.delim("~/projects/sex_differences_fetal_brain/cemitool/_h/phenotype.txt",check.names = F,header = T)
+    pheno$Samples <- as.character(pheno$Samples)
+    row.names(pheno) <- pheno$Samples
+    pheno[,c(2,3,5)] <- lapply(pheno[,c(2,3,5)], factor)
+  
+  # Saving the PANDA output just in case:
+  save(exp,motif_hit,ppi,file="~/projects/sex_differences_fetal_brain/netZoo/panda/_m/panda_input.rda")
+  
+  ##### Expression files:
+  exp <- as.data.frame(exp)
+  female_samples = subset(pheno$Samples,pheno$Sex == 0)
+  female_exp = exp %>% select(1,which(colnames(exp) %in% female_samples))
+  male_samples = subset(pheno$Samples,pheno$Sex == 1)
+  male_exp = exp %>% select(1,which(colnames(exp) %in% male_samples))
+  
+  
+  
+  write.table(male_exp, file = "~/projects/sex_differences_fetal_brain/netZoo/panda/_m/male_exp.txt", quote = FALSE, row.names = FALSE, col.names = FALSE, sep = "\t")
+
+  write.table(female_exp, file = "~/projects/sex_differences_fetal_brain/netZoo/panda/_m/female_exp.txt", quote = FALSE, row.names = FALSE, col.names = FALSE, sep = "\t")
+  
+  ##### PPI files:
+  write.table(ppi,file = "~/projects/sex_differences_fetal_brain/netZoo/panda/_m/ppi.txt", quote = FALSE, row.names = FALSE, col.names = FALSE, sep = "\t")
+  
+  ##### Motif files:
+  write.table(motif_hit,file = "~/projects/sex_differences_fetal_brain/netZoo/panda/_m/motif.txt", quote = FALSE, row.names = FALSE, col.names = FALSE, sep = "\t")
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+sessionInfo()
+```

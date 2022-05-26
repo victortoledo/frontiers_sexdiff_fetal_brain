@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#PBS -d /home/users/victor/projects/sex_differences_brain_networks/panda_symbol
+#PBS -e /home/users/victor/projects/sex_differences_brain_networks/panda_symbol
+#PBS -l nodes=1:ppn=8,mem=50gb
+#PBS -N sex-differences-brain-networks.py
+#PBS -j oe
+#PBS -q ipq01
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda deactivate
+
+/opt/python-3.6.1/bin/python3 /home/users/victor/projects/sex_differences_brain_networks/panda_symbol/_h/panda.py
