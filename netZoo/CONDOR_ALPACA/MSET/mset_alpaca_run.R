@@ -6,7 +6,6 @@ library(dplyr)
 library(ggplot2)
 library(readxl)
 
-
 # Create cell types list:
 # cell_types <- readxl::read_xlsx("~/Documents/projects/ms-victor/sex_differences_fetal_brain/netZoo/alpaca/_m/MSET/databases/cell_type(polioudakis2019)/1-s2.0-S0896627319305616-mmc5.xlsx",
 #                                 sheet = 3)
@@ -18,10 +17,14 @@ library(readxl)
 #               sep = "", col.names = F, row.names = F, quote = F)
 # }
 
+
+### Input and databases must be selected by hand and parameters fed to the console prompt.
+
+
 ################################# MALE SPECIFIC
 # Build the lists with genes and background for each cell type:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical_notf")
-bg = as.data.frame(fread("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical_notf/male_modules_just_genes.tsv")) # 11151 elements
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca")
+bg = as.data.frame(fread("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/male_modules_just_genes.tsv")) # 11151 elements
 
 # Build the input for male modules:
 bg = bg[bg$gene_class == "Target",] #10421 genes
@@ -33,7 +36,7 @@ for (i in unique(bg$module)){
   colnames(a) = "genes"
   print(paste(i,length(input$genes)),sep="_")
   input = rbind(input,a)
-  write.table(input, file = paste0("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET/module_",i,"_gene_list.txt"),
+  write.table(input, file = paste0("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET/module_",i,"_gene_list.txt"),
               sep = "", col.names = F, row.names = F, quote = F)
   
 }
@@ -52,7 +55,7 @@ for (i in unique(bg$module)){
 
 ################# MALE CELL TYPE:
 # Run the MSET for module 1 cell type:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET")
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET")
 sink("MSET_results_mod1_cell_type", append=F, split=F)
 source("mset_v2.R")
 sink()
@@ -135,7 +138,7 @@ sink()
 
 ################# MALE DISORDERS:
 # Run the MSET for module 1 disorders:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET")
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET")
 sink("MSET_results_mod1_disorders", append=F, split=F)
 source("mset_v2.R")
 sink()
@@ -217,7 +220,7 @@ sink()
 
 ################################# FEMALE SPECIFIC
 # Build the lists with genes and background for each cell type:
-bg = as.data.frame(fread("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/female_modules_genes.tsv")) # 11147 genes
+bg = as.data.frame(fread("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_modules_genes.tsv")) # 11147 genes
 
 # Build the input for male modules:
 bg = bg[bg$gene_class == "Target",] #10417
@@ -229,7 +232,7 @@ for (i in unique(bg$module)){
   colnames(a) = "genes"
   print(paste(i,length(input$genes)),sep="_")
   input = rbind(input,a)
-  write.table(input, file = paste0("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET/female_module_",i,"_gene_list.txt"),
+  write.table(input, file = paste0("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET/female_module_",i,"_gene_list.txt"),
               sep = "", col.names = F, row.names = F, quote = F)
   
 }
@@ -362,7 +365,7 @@ sink()
 
 
 ################################## Cell type:
-results_cell_type = read.csv("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET_results_modules - cell_type.csv", header = TRUE)
+results_cell_type = read.csv("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET_results_modules - cell_type.csv", header = TRUE)
 results_female <- results_cell_type[results_cell_type$sex == "Female",]
 results_male <- results_cell_type[results_cell_type$sex == "Male",]
 
@@ -387,12 +390,12 @@ fresults_match = fresults[,c(1,5,11,8)]
 colnames(fresults_match) = c("Tissues","Fold enrichment", "Adjusted p-value", "Female baseline modules")
 fresults_match %>% 
   mutate(zscore = (`Fold enrichment` - mean(`Fold enrichment`))/sd(`Fold enrichment`)) -> fresults_match
-colnames(fresults_match)[5] <- "Z-escore"
+colnames(fresults_match)[5] <- "Z-score"
 
 # Plot:
 library(ggplot2)
 par(mar=(c(1,1,1,1)))
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/female_mset_tissue.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_mset_tissue.pdf",
     width = 6, height = 5)
 p = ggplot(fresults_match[which(fresults_match$`Fold enrichment`>0),], aes(x=`Female baseline modules`,y=`Tissues`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -412,7 +415,7 @@ mresults_match = mresults[,c(1,5,11,8)]
 colnames(mresults_match) = c("Tissues","Fold enrichment", "Adjusted p-value", "Male baseline modules")
 mresults_match %>% 
   mutate(zscore = (`Fold enrichment` - mean(`Fold enrichment`))/sd(`Fold enrichment`)) -> mresults_match
-colnames(mresults_match)[5] <- "Z-escore"
+colnames(mresults_match)[5] <- "Z-score"
 mresults_match$`Male baseline modules` <- factor(mresults_match$`Male baseline modules`,
                                                  levels=c("M1","M2","M3","M4",
                                                           "M5","M6","M7","M8",
@@ -421,7 +424,7 @@ mresults_match$`Male baseline modules` <- factor(mresults_match$`Male baseline m
 # Plot:
 library(ggplot2)
 par(mar=(c(1,1,1,1)))
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/male_mset_tissue.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/male_mset_tissue.pdf",
     width = 6.5, height = 5)
 p = ggplot(mresults_match[which(mresults_match$`Fold enrichment`>0),], aes(x=`Male baseline modules`,y=`Tissues`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -434,7 +437,7 @@ p
 dev.off()
 
 ################################## Disorders:
-results_disorders = read.csv("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET_results_modules - disorders.csv", header = TRUE)
+results_disorders = read.csv("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET_results_modules - disorders.csv", header = TRUE)
 results_disorders_female <- results_disorders[results_disorders$sex == "Female",]
 results_disorders_male <- results_disorders[results_disorders$sex == "Male",]
 
@@ -459,11 +462,11 @@ fresults_match = fresults[,c(1,5,11,8)]
 colnames(fresults_match) = c("Disorders dataset","Fold enrichment", "Adjusted p-value", "Female baseline modules")
 fresults_match %>% 
   mutate(zscore = (`Fold enrichment` - mean(`Fold enrichment`))/sd(`Fold enrichment`)) -> fresults_match
-colnames(fresults_match)[5] <- "Z-escore"
+colnames(fresults_match)[5] <- "Z-score"
 
 # Plot:
 library(ggplot2)
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/female_mset_disorders.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_mset_disorders.pdf",
     width = 6.5, height = 5)
 p = ggplot(fresults_match[which(fresults_match$`Fold enrichment`>0),], aes(x=`Female baseline modules`,y=`Disorders dataset`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -492,7 +495,7 @@ mresults_match$`Male baseline modules` <- factor(mresults_match$`Male baseline m
 # Plot:
 library(ggplot2)
 par(mar=(c(1,1,1,1)))
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/male_mset_disorders.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/male_mset_disorders.pdf",
     width = 6.5, height = 5)
 p = ggplot(mresults_match[which(mresults_match$`Fold enrichment`>0),], aes(x=`Male baseline modules`,y=`Disorders dataset`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -506,10 +509,10 @@ dev.off()
 
 # Final disorders MSET results with adjusted p-value
 final_disorders_results <- rbind(fresults,mresults)
-write.table(final_disorders_results, file = paste0("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET/final_disorders_MSET_results.txt"),
+write.table(final_disorders_results, file = paste0("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET/final_disorders_MSET_results.txt"),
             sep = "\t", row.names = F, quote = F)
 ################################## hormones:
-results_hormones = read.csv("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET_results_modules - hormones.csv", header = TRUE)
+results_hormones = read.csv("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET_results_modules - hormones.csv", header = TRUE)
 results_hormones_female <- results_hormones[results_hormones$Baseline.Sex == "Female",]
 results_hormones_male <- results_hormones[results_hormones$Baseline.Sex == "Male",]
 
@@ -534,11 +537,11 @@ fresults_match = fresults[,c(1,5,11,8)]
 colnames(fresults_match) = c("hormones dataset","Fold enrichment", "Adjusted p-value", "Female baseline modules")
 fresults_match %>% 
   mutate(zscore = (`Fold enrichment` - mean(`Fold enrichment`))/sd(`Fold enrichment`)) -> fresults_match
-colnames(fresults_match)[5] <- "Z-escore"
+colnames(fresults_match)[5] <- "Z-score"
 
 # Plot:
 library(ggplot2)
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/female_mset_hormones.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_mset_hormones.pdf",
     width = 6.5, height = 5)
 p = ggplot(fresults_match[which(fresults_match$`Fold enrichment`>0),], aes(x=`Female baseline modules`,y=`hormones dataset`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -567,7 +570,7 @@ mresults_match$`Male baseline modules` <- factor(mresults_match$`Male baseline m
 # Plot:
 library(ggplot2)
 par(mar=(c(1,1,1,1)))
-pdf("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/male_mset_hormones.pdf",
+pdf("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/male_mset_hormones.pdf",
     width = 6.5, height = 5)
 p = ggplot(mresults_match[which(mresults_match$`Fold enrichment`>0),], aes(x=`Male baseline modules`,y=`hormones dataset`)) +
   geom_point(aes(size = `Fold enrichment`, colour = `Adjusted p-value`), shape = 16) +
@@ -581,5 +584,5 @@ dev.off()
 
 # Final hormone MSET results with adjusted p-value
 final_hormone_results <- rbind(fresults,mresults)
-write.table(final_hormone_results, file = paste0("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca_canonical/MSET/final_hormone_MSET_results.txt"),
+write.table(final_hormone_results, file = paste0("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/MSET/final_hormone_MSET_results.txt"),
             sep = ",", row.names = F, quote = F)

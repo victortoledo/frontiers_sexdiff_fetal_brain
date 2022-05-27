@@ -162,36 +162,13 @@ Creating the files to run PANDA in Python in the cluster:
   ppi %>% inner_join(gene_symbols3,by=c("protein2" = "ENSEMBLPROT")) -> ppi
   ppi <- ppi[,c(1,4,3)]
   colnames(ppi) <- c("protein1","protein2","score")
+```  
   
-  #missing_tfs = motif[!(motif$tf %in% anotstring$alias),]
-  #unique(missing_tfs$tf)
-  # "ZFY" no ENSP
-  # "SRY" no ENSP
-  # "ENSG00000235187" no ENSP
-  # "AC226150.2" no ENSP
-  # "ENSG00000250542" no ENSP
-  # "HSFY2" no ENSP
-  # For PANDA, the motif and the PPI files must not have the same proteins, therefore we are not filtering the motif by the PPI
-  # anotstring = anotstring[,1:2]
-  # a = anotstring[anotstring$alias %in% motif$tf,]
-  # a$source <- NULL
-  # b = string[string$protein1 %in% a$string_protein_id,]
-  # b = b[b$protein2 %in% a$string_protein_id,]
-  # c = inner_join(b,a,by=c("protein1"="string_protein_id"))
-  # c = c[,c(4,2,3)]
-  # colnames(c)[1] = "protein1"
-  # c = inner_join(c,a,by=c("protein2"="string_protein_id"))
-  # c = c[,c(1,4,3)]
-  # colnames(c)[2] = "protein2"
-  # c = c[c$protein1 %in% final_motifs$tf,]
-  # c = c[c$protein2 %in% final_motifs$tf,]
-  # final_ppi = unique(c, by=c("protein1","protein2")) #6196
-  # #final_motifs #5866185
-  # final_exp = exp_ensembl_hit #15796
+  Formating the files to run in Python:
   
-  # Formating the files to run in Python:
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
     # Reading metadata
-    pheno <- read.delim("~/projects/sex_differences_fetal_brain/cemitool/_h/phenotype.txt",check.names = F,header = T)
+    pheno <- read.delim("~/projects/sex_differences_fetal_brain/panda/_h/phenotype.txt",check.names = F,header = T)
     pheno$Samples <- as.character(pheno$Samples)
     row.names(pheno) <- pheno$Samples
     pheno[,c(2,3,5)] <- lapply(pheno[,c(2,3,5)], factor)

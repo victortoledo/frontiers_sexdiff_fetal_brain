@@ -5,7 +5,7 @@
 ##########################################
 
 #Load all the packages and set the folder:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca")
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca")
 options(stringsAsFactors = F)
 options(bitmapType = 'cairo')
 library(data.table)
@@ -37,7 +37,7 @@ malecontrol = cbind(m[,c(1,2,4)],f[,4])
 #gc()
 colnames(malecontrol) = c("tf","gene","control_score","perturbed_score")
 malecontrol = as.data.frame(malecontrol)
-malealp = alpaca(net.table=malecontrol, file.stem = "~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca/malecontrol",
+malealp = alpaca(net.table=malecontrol, file.stem = "~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/malecontrol",
                  verbose = T)
 save(malealp,file = "male_alpaca.rda")
 
@@ -84,7 +84,7 @@ write.table(universe, paste0("universe_alpaca_genes_male.txt"),
             col.names = F, quote = F, row.names = F)
 
 #Enrichment per se:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca")
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca")
 
 for (i in files) {
   
@@ -181,7 +181,7 @@ for (i in files) {
 }
 
 ############################################### Using female samples as control:
-setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca")
+setwd("~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca")
 # f <- fread("~/Documents/output_panda_female.txt")
 # m <- fread("~/Documents/output_panda_male.txt")
 # colnames(m) = c("tf","gene","canonical","score")
@@ -190,9 +190,9 @@ setwd("~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_dif
 femalecontrol = cbind(f[,c(1,2,4)],m[,4])
 rm(m)
 femalecontrol = as.data.frame(femalecontrol)
-femalp = alpaca(net.table=femalecontrol, file.stem = "~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca/femalecontrol",
+femalp = alpaca(net.table=femalecontrol, file.stem = "~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/femalecontrol",
                 verbose = T)
-save(femalp,file = "~/Documents/Documents - Victor’s MacBook Pro/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_alpaca.rda")
+save(femalp,file = "~/Documents/projects/ms-victor/sex_differences_fetal_brain/alpaca/female_alpaca.rda")
 
 ###### Running enrichment on scores:
 mod.memb <- femalp[[1]]

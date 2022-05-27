@@ -40,7 +40,7 @@ hubs <- get_hubs(cem,10)
 summary <- mod_summary(cem)
 
 # write analysis results into files
-write_files(cem, directory = '~/projects/sex_differences_fetal_brain/cemitool-pedro/Tables',force=TRUE)
+write_files(cem, directory = '~/projects/sex_differences_fetal_brain/cemitool/Tables',force=TRUE)
 
 # save all plots
 cem <- plot_beta_r2(cem)
@@ -57,10 +57,10 @@ cem <- mod_gsea(cem, gsea_max_size = 6000)
 cem <- plot_gsea(cem)
 
 # create report as html document
-generate_report(cem, directory = '~/projects/sex_differences_fetal_brain/cemitool-pedro/Report',force=TRUE)
+generate_report(cem, directory = '~/projects/sex_differences_fetal_brain/cemitool/Report',force=TRUE)
 
 save_plots(cem, 'all',
-           directory = '~/projects/sex_differences_fetal_brain/cemitool-pedro/Plots',force=TRUE)
+           directory = '~/projects/sex_differences_fetal_brain/cemitool/Plots',force=TRUE)
 
 #save hubs
 a <- data.frame()
@@ -71,7 +71,7 @@ for (i in names(hubs)){
 colnames(a) <- c("hub1","hub2","hub3","hub4","hub5","hub6","hub7","hub8","hub9","hub10")
 
 
-write.csv(a, file = "~/projects/sex_differences_fetal_brain/cemitool-pedro/hubs.txt")
+write.csv(a, file = "~/projects/sex_differences_fetal_brain/cemitool/hubs.txt")
 
 sessionInfo()
 
