@@ -17,7 +17,7 @@ contains the preparation of the expression data input to build co-expression and
 
 ### 1. CEMiTool:
 creates and analyzes CEMiTool co-expression modules
-- build the co-expression network, calculates class specific activity, runs enrichment of biological processes in each of the modules, integrates PPI data
+- builds the co-expression network, calculates class specific activity, runs enrichment of biological processes in each of the modules, integrates PPI data
 
 ### 2. netZoo: 
 builds and analyzes gene regulatory networks
